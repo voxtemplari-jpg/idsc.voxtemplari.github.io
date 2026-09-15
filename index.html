@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Vox Templari — the official student publication of IDSC.">
+  <title>Vox Templari | Official Student Publication</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header"><div class="container header-row">
+  <a class="brand" href="index.html"><div class="brand-mark">VT</div><div><div class="brand-title">Vox Templari</div><div class="brand-sub">Official Student Publication</div></div></a>
+  <button id="menuBtn" class="mobile-menu" aria-label="Open menu">☰</button>
+  <nav id="mainNav" class="nav"><a href="#latest">Latest</a><a href="#latest" data-nav="News">News</a><a href="#latest">Features</a><a href="#latest">Opinion</a><a href="#latest">Photojournalism</a><a class="nav-admin" href="admin.html">Newsroom Login</a></nav>
+</div></header>
+
+<main>
+  <section class="masthead"><div class="container"><div class="section-kicker">Truth • Campus • Community</div><h1>VOX TEMPLARI</h1><p>Stories from the IDSC community—reported, written, photographed, edited, and preserved by student journalists.</p></div></section>
+  <section class="container"><div id="featuredStories" class="hero"></div></section>
+  <section id="latest" class="section"><div class="container"><div class="section-head"><div><div class="section-kicker">The latest</div><h2>From the newsroom</h2></div><div id="categoryFilters" class="filters"></div></div><div id="storyGrid" class="story-grid"></div></div></section>
+</main>
+
+<footer class="site-footer"><div class="container footer-grid"><div><div class="footer-title">Vox Templari</div><p class="footer-small">The official student publication of Infotech Development Systems Colleges, Inc. This starter website is designed for continuity across editorial boards.</p></div><div><strong>Sections</strong><p class="footer-small">News<br>Features<br>Editorial & Opinion<br>Sports<br>Photojournalism</p></div><div><strong>Newsroom</strong><p class="footer-small"><a href="admin.html">Staff login</a><br>Editorial archive<br>Contact the publication</p></div></div></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/site.js"></script>
+</body></html>
