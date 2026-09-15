@@ -1,509 +1,1910 @@
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-const slugify = s => String(s||'').toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,120);
+// ============================================================
+// VOX TEMPLARI NEWSROOM
+// admin.js
+// ============================================================
+
+
+// ------------------------------------------------------------
+// BASIC HELPERS
+// ------------------------------------------------------------
+
+const $ = selector => document.querySelector(selector);
+
+const $$ = selector => [
+  ...document.querySelectorAll(selector)
+];
+
+const esc = value =>
+  String(value ?? "").replace(
+    /[&<>'"]/g,
+    character =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+      })[character]
+  );
+
+const slugify = value =>
+  String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 120);
+
+
+// ------------------------------------------------------------
+// GLOBAL STATE
+// ------------------------------------------------------------
+
 let currentUser = null;
 let currentProfile = null;
 let currentArticleId = null;
 let allArticles = [];
 
-if (!window.VT.configured) {
-  showLoginNotice('Before the newsroom can work, copy js/config.example.js to js/config.js and add your Supabase URL and anon key.', true);
-} else {
-  boot();
-}
-
-async function boot() {
-  const { data:{ session } } = await VT.supabase.auth.getSession();
-  if (session) await enterDashboard(session.user);
-  VT.supabase.auth.onAuthStateChange((_event, session) => {
-    if (!session) showLogin();
-  });
-}
-
-$('#loginForm')?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = $('#email').value.trim();
-  const password = $('#password').value;
-  const { data, error } = await VT.supabase.auth.signInWithPassword({email,password});
-  if (error) return showLoginNotice(error.message, true);
-  await enterDashboard(data.user);
-});
-
-$('#logoutBtn')?.addEventListener('click', async()=>{ await VT.supabase.auth.signOut(); showLogin(); });
-
-async function enterDashboard(user) {
-  currentUser = user;
-  const { data:profile } = await VT.supabase.from('profiles').select('*').eq('id',user.id).maybeSingle();
-  currentProfile = profile || {role:'contributor', display_name:user.email};
-  $('#loginScreen').classList.add('hidden');
-  $('#dashboard').classList.remove('hidden');
-  $('#userLabel').textContent = `${currentProfile.display_name || user.email} • ${currentProfile.role}`;
-  const canFeature = ['editor','admin'].includes(currentProfile.role);
-  $('#featuredPanel').classList.toggle('hidden', !canFeature);
-  $('#publishBtn').classList.toggle('hidden', currentProfile.role === 'contributor');
-  await refreshArticles();
-}
-
-function showLogin(){ $('#dashboard').classList.add('hidden'); $('#loginScreen').classList.remove('hidden'); }
-function showLoginNotice(msg,isError=false){ const n=$('#loginNotice'); n.textContent=msg; n.className=`notice${isError?' error':''}`; n.classList.remove('hidden'); }
-function setStatus(msg){ $('#saveStatus').textContent=msg; }
-
-async function refreshArticles() {
-  let query = VT.supabase.from('articles').select('*').order('updated_at',{ascending:false});
-  const { data, error } = await query;
-  if (error) return setStatus(error.message);
-  allArticles = data || [];
-  renderArticleList();
-  renderFeatured();
-}
-
-function renderArticleList() {
-  const el = $('#articleList');
-  const visible = currentProfile.role === 'contributor' ? allArticles.filter(a=>a.author_id===currentUser.id) : allArticles;
-  el.innerHTML = visible.map(a=>`<div class="admin-item"><div><div class="admin-item-title">${esc(a.title)}</div><div class="status">${esc(a.category)} · <span class="badge ${a.status}">${esc(a.status)}</span> · Updated ${new Date(a.updated_at).toLocaleString()}</div></div><div class="actions"><button class="btn btn-secondary" data-edit="${a.id}">Edit</button>${['editor','admin'].includes(currentProfile.role)?`<button class="btn btn-danger" data-delete="${a.id}">Delete</button>`:''}</div></div>`).join('') || '<div class="empty">No articles yet.</div>';
-}
-
-$('#articleList')?.addEventListener('click', async e=>{
-  const edit = e.target.closest('[data-edit]');
-  if (edit) return openArticle(edit.dataset.edit);
-  const del = e.target.closest('[data-delete]');
-  if (del) {
-    if (!confirm('Delete this article permanently?')) return;
-    const { error } = await VT.supabase.from('articles').delete().eq('id',del.dataset.delete);
-    if (error) return setStatus(error.message);
-    if (currentArticleId === del.dataset.delete) resetForm();
-    await refreshArticles();
-  }
-});
-
-function openArticle(id) {
-  const a = allArticles.find(x=>x.id===id); if (!a) return;
-  currentArticleId = id;
-  $('#formTitle').textContent = 'Edit Article';
-  $('#titleInput').value = a.title || '';
-  $('#slugInput').value = a.slug || '';
-  $('#categoryInput').value = a.category || 'News';
-  $('#authorInput').value = a.author_name || currentProfile.display_name || '';
-  $('#excerptInput').value = a.excerpt || '';
-  $('#imageUrlInput').value = a.featured_image_url || '';
-  $('#imageAltInput').value = a.image_alt || '';
-  $('#editor').innerHTML = a.body_html || '';
-  $('#statusInput').value = a.status || 'draft';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-$('#newArticleBtn')?.addEventListener('click', resetForm);
-function resetForm() {
-  currentArticleId = null;
-  $('#formTitle').textContent = 'New Article';
-  $('#articleForm').reset();
-  $('#editor').innerHTML = '';
-  $('#categoryInput').value='News';
-  $('#statusInput').value='draft';
-  $('#authorInput').value=currentProfile?.display_name || '';
-  setStatus('');
-}
-
-$('#titleInput')?.addEventListener('input', e=>{
-  if (!currentArticleId || !$('#slugInput').value) $('#slugInput').value=slugify(e.target.value);
-});
-
-$('#articleForm')?.addEventListener('submit', async e=>{
-  e.preventDefault();
-  await saveArticle($('#statusInput').value || 'draft');
-});
-$('#saveDraftBtn')?.addEventListener('click',()=>saveArticle('draft'));
-$('#publishBtn')?.addEventListener('click',()=>saveArticle('published'));
-
-async function saveArticle(status) {
-  if (!currentUser) return;
-  if (status==='published' && currentProfile.role==='contributor') status='draft';
-  const title=$('#titleInput').value.trim();
-  if (!title) return setStatus('Title is required.');
-  const payload = {
-    title,
-    slug: slugify($('#slugInput').value || title),
-    category: $('#categoryInput').value,
-    author_name: $('#authorInput').value.trim() || currentProfile.display_name || currentUser.email,
-    excerpt: $('#excerptInput').value.trim(),
-    featured_image_url: $('#imageUrlInput').value.trim() || null,
-    image_alt: $('#imageAltInput').value.trim(),
-    body_html: $('#editor').innerHTML,
-    status,
-    author_id: currentArticleId ? (allArticles.find(a=>a.id===currentArticleId)?.author_id || currentUser.id) : currentUser.id,
-    updated_at: new Date().toISOString()
-  };
-  if (status==='published' && !currentArticleId) payload.published_at = new Date().toISOString();
-  if (status==='published' && currentArticleId) {
-    const old=allArticles.find(a=>a.id===currentArticleId);
-    payload.published_at = old?.published_at || new Date().toISOString();
-  }
-  let result;
-  if (currentArticleId) result=await VT.supabase.from('articles').update(payload).eq('id',currentArticleId).select().single();
-  else result=await VT.supabase.from('articles').insert(payload).select().single();
-  if (result.error) return setStatus(result.error.message);
-  currentArticleId = result.data.id;
-  $('#statusInput').value=status;
-  setStatus(status==='published'?'Published successfully.':'Draft saved.');
-  await refreshArticles();
-}
-
-$('#imageFile')?.addEventListener('change', async e=>{
-  const file=e.target.files?.[0]; if (!file) return;
-  setStatus('Uploading image…');
-  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'-');
-  const path=`${currentUser.id}/${Date.now()}-${safeName}`;
-  const { error }=await VT.supabase.storage.from('article-images').upload(path,file,{upsert:false});
-  if (error) return setStatus(error.message);
-  const { data }=VT.supabase.storage.from('article-images').getPublicUrl(path);
-  $('#imageUrlInput').value=data.publicUrl;
-  setStatus('Image uploaded.');
-});
-
-// Lightweight rich-text editor controls. Formatting is stored inside body_html,
-// so no database/schema changes are needed.
 let savedEditorRange = null;
 
-function rememberEditorSelection() {
-  const editor = $('#editor');
-  const selection = window.getSelection();
-  if (!editor || !selection || !selection.rangeCount) return;
-  const range = selection.getRangeAt(0);
-  if (editor.contains(range.commonAncestorContainer)) savedEditorRange = range.cloneRange();
-}
+let enteringDashboard = false;
 
-function restoreEditorSelection() {
-  if (!savedEditorRange) return;
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(savedEditorRange);
-}
 
-function runEditorCommand(cmd, value = null) {
-  restoreEditorSelection();
-  $('#editor').focus();
-  // Ask supported browsers to save formatting as CSS instead of legacy <font> tags.
-  try { document.execCommand('styleWithCSS', false, true); } catch (_) {}
-  document.execCommand(cmd, false, value);
-  rememberEditorSelection();
-}
+// ------------------------------------------------------------
+// START NEWSROOM
+// ------------------------------------------------------------
 
-$('#editor')?.addEventListener('mouseup', rememberEditorSelection);
-$('#editor')?.addEventListener('keyup', rememberEditorSelection);
-$('#editor')?.addEventListener('input', rememberEditorSelection);
+if (
+  !window.VT ||
+  !window.VT.configured ||
+  !window.VT.supabase
+) {
 
-$('#toolbar')?.addEventListener('mousedown', e => {
-  if (e.target.closest('button, select')) rememberEditorSelection();
-});
+  showLoginNotice(
+    "The newsroom is not connected to Supabase. Check js/config.js.",
+    true
+  );
 
-$('#toolbar')?.addEventListener('click', e=>{
-  const btn=e.target.closest('button'); if(!btn) return;
-  e.preventDefault();
-  const cmd=btn.dataset.cmd;
-  const value=btn.dataset.value || null;
-  if (!cmd) return;
-
-  if(cmd==='createLink') {
-    restoreEditorSelection();
-    const url=prompt('Link URL (for example: https://example.com)');
-    if(url) runEditorCommand(cmd, url);
-  } else {
-    runEditorCommand(cmd, value);
-  }
-});
-
-$('#fontFamilySelect')?.addEventListener('change', e=>{
-  const value=e.target.value;
-  if(value) runEditorCommand('fontName', value);
-  e.target.selectedIndex=0;
-});
-
-$('#fontSizeSelect')?.addEventListener('change', e=>{
-  const value=e.target.value;
-  if(value) runEditorCommand('fontSize', value);
-  e.target.selectedIndex=0;
-});
-
-function renderFeatured() {
-  if (!['editor','admin'].includes(currentProfile?.role)) return;
-  const published=allArticles.filter(a=>a.status==='published').sort((a,b)=>(a.featured_rank??999)-(b.featured_rank??999) || new Date(b.published_at)-new Date(a.published_at));
-  $('#featuredList').innerHTML=published.map(a=>`<div class="drag-item" draggable="true" data-id="${a.id}"><span class="drag-handle">☰</span><span>${esc(a.title)}</span></div>`).join('') || '<div class="empty">Publish an article first.</div>';
-  setupDrag();
-}
-
-function setupDrag() {
-  const list=$('#featuredList'); let dragging=null;
-  $$('.drag-item').forEach(item=>{
-    item.addEventListener('dragstart',()=>{dragging=item; item.classList.add('dragging');});
-    item.addEventListener('dragend',()=>{item.classList.remove('dragging'); dragging=null;});
-  });
-  list.addEventListener('dragover',e=>{
-    e.preventDefault(); if(!dragging) return;
-    const siblings=[...list.querySelectorAll('.drag-item:not(.dragging)')];
-    const next=siblings.find(s=>e.clientY <= s.getBoundingClientRect().top+s.offsetHeight/2);
-    list.insertBefore(dragging,next||null);
-  });
-}
-
-$('#saveFeaturedBtn')?.addEventListener('click', async()=>{
-  const ids=$$('#featuredList .drag-item').map(x=>x.dataset.id);
-  setStatus('Saving featured order…');
-  for (let i=0;i<ids.length;i++) {
-    const { error }=await VT.supabase.from('articles').update({featured_rank:i+1}).eq('id',ids[i]);
-    if(error) return setStatus(error.message);
-  }
-  setStatus('Featured order saved.');
-  await refreshArticles();
-});
-);
-
-document.querySelector('#editor')?.addEventListener(
-  'keyup',
-  rememberEditorSelection
-);
-
-// Save selection before opening dropdown
-document.querySelector('#fontFamilySelect')?.addEventListener(
-  'mousedown',
-  rememberEditorSelection
-);
-
-document.querySelector('#fontSizeSelect')?.addEventListener(
-  'mousedown',
-  rememberEditorSelection
-);
-
-// Change font
-document.querySelector('#fontFamilySelect')?.addEventListener(
-  'change',
-  e => {
-    if (!e.target.value) return;
-
-    restoreEditorSelection();
-
-    document.execCommand(
-      'fontName',
-      false,
-      e.target.value
-    );
-
-    document.querySelector('#editor').focus();
-
-    e.target.selectedIndex = 0;
-  }
-);
-
-// Change font size
-document.querySelector('#fontSizeSelect')?.addEventListener(
-  'change',
-  e => {
-    if (!e.target.value) return;
-
-    restoreEditorSelection();
-
-    document.execCommand(
-      'fontSize',
-      false,
-      e.target.value
-    );
-
-    document.querySelector('#editor').focus();
-
-    e.target.selectedIndex = 0;
-  }
-);
-if (!window.VT.configured) {
-  showLoginNotice('Before the newsroom can work, copy js/config.example.js to js/config.js and add your Supabase URL and anon key.', true);
 } else {
+
   boot();
+
 }
+
+
+// ============================================================
+// AUTHENTICATION
+// ============================================================
 
 async function boot() {
-  const { data:{ session } } = await VT.supabase.auth.getSession();
-  if (session) await enterDashboard(session.user);
-  VT.supabase.auth.onAuthStateChange((_event, session) => {
-    if (!session) showLogin();
-  });
+
+  try {
+
+    const {
+      data: { session },
+      error
+    } = await VT.supabase.auth.getSession();
+
+
+    if (error) {
+
+      console.error(
+        "Supabase session error:",
+        error
+      );
+
+      showLoginNotice(
+        error.message,
+        true
+      );
+
+      return;
+
+    }
+
+
+    if (session?.user) {
+
+      await enterDashboard(
+        session.user
+      );
+
+    } else {
+
+      showLogin();
+
+    }
+
+
+    // Listen for future authentication changes.
+    //
+    // IMPORTANT:
+    // We only return to the login page when Supabase explicitly
+    // reports SIGNED_OUT.
+    //
+    // This prevents the old "login bounce" problem.
+
+    VT.supabase.auth.onAuthStateChange(
+      (event, session) => {
+
+        console.log(
+          "[Vox Templari Auth]",
+          event,
+          session ? "session active" : "no session"
+        );
+
+
+        // Run asynchronously outside the auth callback.
+        setTimeout(
+          async () => {
+
+            if (event === "SIGNED_OUT") {
+
+              currentUser = null;
+              currentProfile = null;
+
+              showLogin();
+
+              return;
+
+            }
+
+
+            if (
+              session?.user &&
+              (
+                event === "SIGNED_IN" ||
+                event === "TOKEN_REFRESHED" ||
+                event === "USER_UPDATED"
+              )
+            ) {
+
+              await enterDashboard(
+                session.user
+              );
+
+            }
+
+          },
+          0
+        );
+
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Unable to initialize newsroom:",
+      error
+    );
+
+    showLoginNotice(
+      "Unable to initialize the newsroom. Please refresh the page.",
+      true
+    );
+
+  }
+
 }
 
-$('#loginForm')?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const email = $('#email').value.trim();
-  const password = $('#password').value;
-  const { data, error } = await VT.supabase.auth.signInWithPassword({email,password});
-  if (error) return showLoginNotice(error.message, true);
-  await enterDashboard(data.user);
-});
 
-$('#logoutBtn')?.addEventListener('click', async()=>{ await VT.supabase.auth.signOut(); showLogin(); });
+// ------------------------------------------------------------
+// LOGIN FORM
+// ------------------------------------------------------------
+
+$("#loginForm")?.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+
+    const email =
+      $("#email").value.trim();
+
+    const password =
+      $("#password").value;
+
+
+    if (!email || !password) {
+
+      showLoginNotice(
+        "Please enter your email and password.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    showLoginNotice(
+      "Signing in…"
+    );
+
+
+    try {
+
+      const {
+        data,
+        error
+      } =
+        await VT.supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+
+      if (error) {
+
+        console.error(
+          "Login error:",
+          error
+        );
+
+        showLoginNotice(
+          error.message,
+          true
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !data?.session ||
+        !data?.user
+      ) {
+
+        showLoginNotice(
+          "Supabase did not create an active login session.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      showLoginNotice(
+        "Signed in successfully."
+      );
+
+
+      await enterDashboard(
+        data.user
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Unexpected login error:",
+        error
+      );
+
+      showLoginNotice(
+        "Something went wrong while signing in.",
+        true
+      );
+
+    }
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// LOGOUT
+// ------------------------------------------------------------
+
+$("#logoutBtn")?.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      await VT.supabase.auth.signOut();
+
+    } catch (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+    }
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// ENTER DASHBOARD
+// ------------------------------------------------------------
 
 async function enterDashboard(user) {
-  currentUser = user;
-  const { data:profile } = await VT.supabase.from('profiles').select('*').eq('id',user.id).maybeSingle();
-  currentProfile = profile || {role:'contributor', display_name:user.email};
-  $('#loginScreen').classList.add('hidden');
-  $('#dashboard').classList.remove('hidden');
-  $('#userLabel').textContent = `${currentProfile.display_name || user.email} • ${currentProfile.role}`;
-  const canFeature = ['editor','admin'].includes(currentProfile.role);
-  $('#featuredPanel').classList.toggle('hidden', !canFeature);
-  $('#publishBtn').classList.toggle('hidden', currentProfile.role === 'contributor');
-  await refreshArticles();
+
+  // Prevent duplicate SIGNED_IN events from trying to load the
+  // dashboard twice at the same moment.
+
+  if (enteringDashboard) {
+    return;
+  }
+
+
+  enteringDashboard = true;
+
+
+  try {
+
+    currentUser = user;
+
+
+    const {
+      data: profile,
+      error: profileError
+    } =
+      await VT.supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+
+
+    if (profileError) {
+
+      console.warn(
+        "Profile could not be loaded:",
+        profileError
+      );
+
+    }
+
+
+    // If a profile does not yet exist, the newsroom can still load
+    // using contributor-level permissions.
+
+    currentProfile =
+      profile || {
+        role: "contributor",
+        display_name:
+          user.email || "Staff Member"
+      };
+
+
+    $("#loginScreen")
+      ?.classList
+      .add("hidden");
+
+
+    $("#dashboard")
+      ?.classList
+      .remove("hidden");
+
+
+    if ($("#userLabel")) {
+
+      $("#userLabel").textContent =
+        `${
+          currentProfile.display_name ||
+          user.email
+        } • ${
+          currentProfile.role
+        }`;
+
+    }
+
+
+    const canFeature =
+      [
+        "editor",
+        "admin"
+      ].includes(
+        currentProfile.role
+      );
+
+
+    $("#featuredPanel")
+      ?.classList
+      .toggle(
+        "hidden",
+        !canFeature
+      );
+
+
+    // Contributors may write drafts,
+    // but cannot publish directly.
+
+    $("#publishBtn")
+      ?.classList
+      .toggle(
+        "hidden",
+        currentProfile.role === "contributor"
+      );
+
+
+    hideLoginNotice();
+
+
+    await refreshArticles();
+
+
+  } catch (error) {
+
+    console.error(
+      "Dashboard loading error:",
+      error
+    );
+
+    showLoginNotice(
+      "You are signed in, but the newsroom could not load. Check the browser console for details.",
+      true
+    );
+
+
+  } finally {
+
+    enteringDashboard = false;
+
+  }
+
 }
 
-function showLogin(){ $('#dashboard').classList.add('hidden'); $('#loginScreen').classList.remove('hidden'); }
-function showLoginNotice(msg,isError=false){ const n=$('#loginNotice'); n.textContent=msg; n.className=`notice${isError?' error':''}`; n.classList.remove('hidden'); }
-function setStatus(msg){ $('#saveStatus').textContent=msg; }
+
+// ------------------------------------------------------------
+// LOGIN SCREEN HELPERS
+// ------------------------------------------------------------
+
+function showLogin() {
+
+  $("#dashboard")
+    ?.classList
+    .add("hidden");
+
+  $("#loginScreen")
+    ?.classList
+    .remove("hidden");
+
+}
+
+
+function showLoginNotice(
+  message,
+  isError = false
+) {
+
+  const notice =
+    $("#loginNotice");
+
+  if (!notice) {
+    return;
+  }
+
+
+  notice.textContent =
+    message;
+
+
+  notice.className =
+    `notice${isError ? " error" : ""}`;
+
+
+  notice.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+function hideLoginNotice() {
+
+  $("#loginNotice")
+    ?.classList
+    .add("hidden");
+
+}
+
+
+function setStatus(message) {
+
+  const status =
+    $("#saveStatus");
+
+  if (status) {
+
+    status.textContent =
+      message;
+
+  }
+
+}
+
+
+// ============================================================
+// ARTICLES
+// ============================================================
+
+
+// ------------------------------------------------------------
+// LOAD ARTICLES
+// ------------------------------------------------------------
 
 async function refreshArticles() {
-  let query = VT.supabase.from('articles').select('*').order('updated_at',{ascending:false});
-  const { data, error } = await query;
-  if (error) return setStatus(error.message);
-  allArticles = data || [];
-  renderArticleList();
-  renderFeatured();
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await VT.supabase
+        .from("articles")
+        .select("*")
+        .order(
+          "updated_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Article loading error:",
+        error
+      );
+
+      setStatus(
+        error.message
+      );
+
+      return;
+
+    }
+
+
+    allArticles =
+      data || [];
+
+
+    renderArticleList();
+
+    renderFeatured();
+
+
+  } catch (error) {
+
+    console.error(
+      "Article refresh error:",
+      error
+    );
+
+    setStatus(
+      "Unable to load articles."
+    );
+
+  }
+
 }
+
+
+// ------------------------------------------------------------
+// RENDER ARTICLE LIST
+// ------------------------------------------------------------
 
 function renderArticleList() {
-  const el = $('#articleList');
-  const visible = currentProfile.role === 'contributor' ? allArticles.filter(a=>a.author_id===currentUser.id) : allArticles;
-  el.innerHTML = visible.map(a=>`<div class="admin-item"><div><div class="admin-item-title">${esc(a.title)}</div><div class="status">${esc(a.category)} · <span class="badge ${a.status}">${esc(a.status)}</span> · Updated ${new Date(a.updated_at).toLocaleString()}</div></div><div class="actions"><button class="btn btn-secondary" data-edit="${a.id}">Edit</button>${['editor','admin'].includes(currentProfile.role)?`<button class="btn btn-danger" data-delete="${a.id}">Delete</button>`:''}</div></div>`).join('') || '<div class="empty">No articles yet.</div>';
+
+  const element =
+    $("#articleList");
+
+  if (!element) {
+    return;
+  }
+
+
+  const visibleArticles =
+    currentProfile?.role ===
+    "contributor"
+
+      ? allArticles.filter(
+          article =>
+            article.author_id ===
+            currentUser.id
+        )
+
+      : allArticles;
+
+
+  element.innerHTML =
+    visibleArticles
+      .map(
+        article => {
+
+          const updatedDate =
+            article.updated_at
+              ? new Date(
+                  article.updated_at
+                ).toLocaleString()
+              : "";
+
+
+          const canDelete =
+            [
+              "editor",
+              "admin"
+            ].includes(
+              currentProfile?.role
+            );
+
+
+          return `
+
+            <div class="admin-item">
+
+              <div>
+
+                <div class="admin-item-title">
+                  ${esc(article.title)}
+                </div>
+
+                <div class="status">
+
+                  ${esc(article.category)}
+
+                  ·
+
+                  <span class="badge ${esc(article.status)}">
+                    ${esc(article.status)}
+                  </span>
+
+                  · Updated ${esc(updatedDate)}
+
+                </div>
+
+              </div>
+
+
+              <div class="actions">
+
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-edit="${article.id}"
+                >
+                  Edit
+                </button>
+
+
+                ${
+                  canDelete
+                    ? `
+                      <button
+                        type="button"
+                        class="btn btn-danger"
+                        data-delete="${article.id}"
+                      >
+                        Delete
+                      </button>
+                    `
+                    : ""
+                }
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("") ||
+
+      `
+        <div class="empty">
+          No articles yet.
+        </div>
+      `;
+
 }
 
-$('#articleList')?.addEventListener('click', async e=>{
-  const edit = e.target.closest('[data-edit]');
-  if (edit) return openArticle(edit.dataset.edit);
-  const del = e.target.closest('[data-delete]');
-  if (del) {
-    if (!confirm('Delete this article permanently?')) return;
-    const { error } = await VT.supabase.from('articles').delete().eq('id',del.dataset.delete);
-    if (error) return setStatus(error.message);
-    if (currentArticleId === del.dataset.delete) resetForm();
+
+// ------------------------------------------------------------
+// ARTICLE LIST BUTTONS
+// ------------------------------------------------------------
+
+$("#articleList")?.addEventListener(
+  "click",
+  async event => {
+
+    const editButton =
+      event.target.closest(
+        "[data-edit]"
+      );
+
+
+    if (editButton) {
+
+      openArticle(
+        editButton.dataset.edit
+      );
+
+      return;
+
+    }
+
+
+    const deleteButton =
+      event.target.closest(
+        "[data-delete]"
+      );
+
+
+    if (!deleteButton) {
+      return;
+    }
+
+
+    const confirmed =
+      confirm(
+        "Delete this article permanently?"
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    const {
+      error
+    } =
+      await VT.supabase
+        .from("articles")
+        .delete()
+        .eq(
+          "id",
+          deleteButton.dataset.delete
+        );
+
+
+    if (error) {
+
+      setStatus(
+        error.message
+      );
+
+      return;
+
+    }
+
+
+    if (
+      currentArticleId ===
+      deleteButton.dataset.delete
+    ) {
+
+      resetForm();
+
+    }
+
+
     await refreshArticles();
+
   }
-});
+);
+
+
+// ------------------------------------------------------------
+// OPEN ARTICLE
+// ------------------------------------------------------------
 
 function openArticle(id) {
-  const a = allArticles.find(x=>x.id===id); if (!a) return;
-  currentArticleId = id;
-  $('#formTitle').textContent = 'Edit Article';
-  $('#titleInput').value = a.title || '';
-  $('#slugInput').value = a.slug || '';
-  $('#categoryInput').value = a.category || 'News';
-  $('#authorInput').value = a.author_name || currentProfile.display_name || '';
-  $('#excerptInput').value = a.excerpt || '';
-  $('#imageUrlInput').value = a.featured_image_url || '';
-  $('#imageAltInput').value = a.image_alt || '';
-  $('#editor').innerHTML = a.body_html || '';
-  $('#statusInput').value = a.status || 'draft';
-  window.scrollTo({top:0,behavior:'smooth'});
+
+  const article =
+    allArticles.find(
+      item =>
+        item.id === id
+    );
+
+
+  if (!article) {
+    return;
+  }
+
+
+  currentArticleId =
+    id;
+
+
+  $("#formTitle").textContent =
+    "Edit Article";
+
+
+  $("#titleInput").value =
+    article.title || "";
+
+
+  $("#slugInput").value =
+    article.slug || "";
+
+
+  $("#categoryInput").value =
+    article.category || "News";
+
+
+  $("#authorInput").value =
+    article.author_name ||
+    currentProfile?.display_name ||
+    "";
+
+
+  $("#excerptInput").value =
+    article.excerpt || "";
+
+
+  $("#imageUrlInput").value =
+    article.featured_image_url ||
+    "";
+
+
+  $("#imageAltInput").value =
+    article.image_alt || "";
+
+
+  $("#editor").innerHTML =
+    article.body_html || "";
+
+
+  $("#statusInput").value =
+    article.status || "draft";
+
+
+  savedEditorRange = null;
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
 }
 
-$('#newArticleBtn')?.addEventListener('click', resetForm);
+
+// ------------------------------------------------------------
+// NEW ARTICLE
+// ------------------------------------------------------------
+
+$("#newArticleBtn")?.addEventListener(
+  "click",
+  resetForm
+);
+
+
 function resetForm() {
-  currentArticleId = null;
-  $('#formTitle').textContent = 'New Article';
-  $('#articleForm').reset();
-  $('#editor').innerHTML = '';
-  $('#categoryInput').value='News';
-  $('#statusInput').value='draft';
-  $('#authorInput').value=currentProfile?.display_name || '';
-  setStatus('');
+
+  currentArticleId =
+    null;
+
+
+  $("#formTitle").textContent =
+    "New Article";
+
+
+  $("#articleForm")
+    ?.reset();
+
+
+  if ($("#editor")) {
+
+    $("#editor").innerHTML =
+      "";
+
+  }
+
+
+  $("#categoryInput").value =
+    "News";
+
+
+  $("#statusInput").value =
+    "draft";
+
+
+  $("#authorInput").value =
+    currentProfile?.display_name ||
+    "";
+
+
+  savedEditorRange =
+    null;
+
+
+  setStatus("");
+
 }
 
-$('#titleInput')?.addEventListener('input', e=>{
-  if (!currentArticleId || !$('#slugInput').value) $('#slugInput').value=slugify(e.target.value);
-});
 
-$('#articleForm')?.addEventListener('submit', async e=>{
-  e.preventDefault();
-  await saveArticle($('#statusInput').value || 'draft');
-});
-$('#saveDraftBtn')?.addEventListener('click',()=>saveArticle('draft'));
-$('#publishBtn')?.addEventListener('click',()=>saveArticle('published'));
+// ------------------------------------------------------------
+// AUTOMATIC URL SLUG
+// ------------------------------------------------------------
+
+$("#titleInput")?.addEventListener(
+  "input",
+  event => {
+
+    const slugField =
+      $("#slugInput");
+
+
+    if (
+      !currentArticleId ||
+      !slugField.value
+    ) {
+
+      slugField.value =
+        slugify(
+          event.target.value
+        );
+
+    }
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// ARTICLE FORM ACTIONS
+// ------------------------------------------------------------
+
+$("#articleForm")?.addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    await saveArticle(
+      $("#statusInput").value ||
+      "draft"
+    );
+
+  }
+);
+
+
+$("#saveDraftBtn")?.addEventListener(
+  "click",
+  () =>
+    saveArticle(
+      "draft"
+    )
+);
+
+
+$("#publishBtn")?.addEventListener(
+  "click",
+  () =>
+    saveArticle(
+      "published"
+    )
+);
+
+
+// ------------------------------------------------------------
+// SAVE ARTICLE
+// ------------------------------------------------------------
 
 async function saveArticle(status) {
-  if (!currentUser) return;
-  if (status==='published' && currentProfile.role==='contributor') status='draft';
-  const title=$('#titleInput').value.trim();
-  if (!title) return setStatus('Title is required.');
-  const payload = {
-    title,
-    slug: slugify($('#slugInput').value || title),
-    category: $('#categoryInput').value,
-    author_name: $('#authorInput').value.trim() || currentProfile.display_name || currentUser.email,
-    excerpt: $('#excerptInput').value.trim(),
-    featured_image_url: $('#imageUrlInput').value.trim() || null,
-    image_alt: $('#imageAltInput').value.trim(),
-    body_html: $('#editor').innerHTML,
-    status,
-    author_id: currentArticleId ? (allArticles.find(a=>a.id===currentArticleId)?.author_id || currentUser.id) : currentUser.id,
-    updated_at: new Date().toISOString()
-  };
-  if (status==='published' && !currentArticleId) payload.published_at = new Date().toISOString();
-  if (status==='published' && currentArticleId) {
-    const old=allArticles.find(a=>a.id===currentArticleId);
-    payload.published_at = old?.published_at || new Date().toISOString();
+
+  if (!currentUser) {
+
+    setStatus(
+      "You are not signed in."
+    );
+
+    return;
+
   }
+
+
+  // Contributors cannot directly publish.
+
+  if (
+    status === "published" &&
+    currentProfile?.role ===
+      "contributor"
+  ) {
+
+    status =
+      "draft";
+
+  }
+
+
+  const title =
+    $("#titleInput")
+      .value
+      .trim();
+
+
+  if (!title) {
+
+    setStatus(
+      "Title is required."
+    );
+
+    return;
+
+  }
+
+
+  setStatus(
+    status === "published"
+      ? "Publishing…"
+      : "Saving…"
+  );
+
+
+  const existingArticle =
+    currentArticleId
+      ? allArticles.find(
+          article =>
+            article.id ===
+            currentArticleId
+        )
+      : null;
+
+
+  const payload = {
+
+    title,
+
+    slug:
+      slugify(
+        $("#slugInput").value ||
+        title
+      ),
+
+    category:
+      $("#categoryInput").value,
+
+    author_name:
+      $("#authorInput")
+        .value
+        .trim() ||
+
+      currentProfile?.display_name ||
+
+      currentUser.email,
+
+    excerpt:
+      $("#excerptInput")
+        .value
+        .trim(),
+
+    featured_image_url:
+      $("#imageUrlInput")
+        .value
+        .trim() ||
+      null,
+
+    image_alt:
+      $("#imageAltInput")
+        .value
+        .trim(),
+
+    body_html:
+      $("#editor").innerHTML,
+
+    status,
+
+    author_id:
+      existingArticle
+        ? (
+            existingArticle.author_id ||
+            currentUser.id
+          )
+        : currentUser.id,
+
+    updated_at:
+      new Date().toISOString()
+
+  };
+
+
+  // Keep the original publication date if editing
+  // an already published article.
+
+  if (status === "published") {
+
+    payload.published_at =
+      existingArticle?.published_at ||
+      new Date().toISOString();
+
+  }
+
+
   let result;
-  if (currentArticleId) result=await VT.supabase.from('articles').update(payload).eq('id',currentArticleId).select().single();
-  else result=await VT.supabase.from('articles').insert(payload).select().single();
-  if (result.error) return setStatus(result.error.message);
-  currentArticleId = result.data.id;
-  $('#statusInput').value=status;
-  setStatus(status==='published'?'Published successfully.':'Draft saved.');
+
+
+  if (currentArticleId) {
+
+    result =
+      await VT.supabase
+        .from("articles")
+        .update(payload)
+        .eq(
+          "id",
+          currentArticleId
+        )
+        .select()
+        .single();
+
+  } else {
+
+    result =
+      await VT.supabase
+        .from("articles")
+        .insert(payload)
+        .select()
+        .single();
+
+  }
+
+
+  if (result.error) {
+
+    console.error(
+      "Save article error:",
+      result.error
+    );
+
+    setStatus(
+      result.error.message
+    );
+
+    return;
+
+  }
+
+
+  currentArticleId =
+    result.data.id;
+
+
+  $("#statusInput").value =
+    status;
+
+
+  setStatus(
+    status === "published"
+      ? "Published successfully."
+      : "Draft saved."
+  );
+
+
   await refreshArticles();
+
 }
 
-$('#imageFile')?.addEventListener('change', async e=>{
-  const file=e.target.files?.[0]; if (!file) return;
-  setStatus('Uploading image…');
-  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'-');
-  const path=`${currentUser.id}/${Date.now()}-${safeName}`;
-  const { error }=await VT.supabase.storage.from('article-images').upload(path,file,{upsert:false});
-  if (error) return setStatus(error.message);
-  const { data }=VT.supabase.storage.from('article-images').getPublicUrl(path);
-  $('#imageUrlInput').value=data.publicUrl;
-  setStatus('Image uploaded.');
-});
 
-$('#toolbar')?.addEventListener('click', e=>{
-  const btn=e.target.closest('button'); if(!btn) return;
-  e.preventDefault();
-  const cmd=btn.dataset.cmd; const value=btn.dataset.value || null;
-  if(cmd==='createLink') { const url=prompt('Link URL'); if(url) document.execCommand(cmd,false,url); }
-  else document.execCommand(cmd,false,value);
-  $('#editor').focus();
-});
+// ============================================================
+// IMAGE UPLOAD
+// ============================================================
+
+$("#imageFile")?.addEventListener(
+  "change",
+  async event => {
+
+    const file =
+      event.target.files?.[0];
+
+
+    if (!file) {
+      return;
+    }
+
+
+    if (!currentUser) {
+
+      setStatus(
+        "Please sign in before uploading an image."
+      );
+
+      return;
+
+    }
+
+
+    setStatus(
+      "Uploading image…"
+    );
+
+
+    const safeName =
+      file.name.replace(
+        /[^a-zA-Z0-9._-]/g,
+        "-"
+      );
+
+
+    const path =
+      `${
+        currentUser.id
+      }/${
+        Date.now()
+      }-${
+        safeName
+      }`;
+
+
+    const {
+      error
+    } =
+      await VT.supabase
+        .storage
+        .from(
+          "article-images"
+        )
+        .upload(
+          path,
+          file,
+          {
+            upsert: false
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Image upload error:",
+        error
+      );
+
+      setStatus(
+        error.message
+      );
+
+      return;
+
+    }
+
+
+    const {
+      data
+    } =
+      VT.supabase
+        .storage
+        .from(
+          "article-images"
+        )
+        .getPublicUrl(path);
+
+
+    $("#imageUrlInput").value =
+      data.publicUrl;
+
+
+    setStatus(
+      "Image uploaded."
+    );
+
+  }
+);
+
+
+// ============================================================
+// RICH TEXT EDITOR
+// ============================================================
+
+
+// ------------------------------------------------------------
+// REMEMBER SELECTED TEXT
+// ------------------------------------------------------------
+
+function rememberEditorSelection() {
+
+  const editor =
+    $("#editor");
+
+
+  const selection =
+    window.getSelection();
+
+
+  if (
+    !editor ||
+    !selection ||
+    !selection.rangeCount
+  ) {
+
+    return;
+
+  }
+
+
+  const range =
+    selection.getRangeAt(0);
+
+
+  if (
+    editor.contains(
+      range.commonAncestorContainer
+    )
+  ) {
+
+    savedEditorRange =
+      range.cloneRange();
+
+  }
+
+}
+
+
+// ------------------------------------------------------------
+// RESTORE SELECTED TEXT
+// ------------------------------------------------------------
+
+function restoreEditorSelection() {
+
+  if (!savedEditorRange) {
+    return;
+  }
+
+
+  const selection =
+    window.getSelection();
+
+
+  selection.removeAllRanges();
+
+  selection.addRange(
+    savedEditorRange
+  );
+
+}
+
+
+// ------------------------------------------------------------
+// RUN EDITOR COMMAND
+// ------------------------------------------------------------
+
+function runEditorCommand(
+  command,
+  value = null
+) {
+
+  restoreEditorSelection();
+
+
+  const editor =
+    $("#editor");
+
+
+  if (!editor) {
+    return;
+  }
+
+
+  editor.focus();
+
+
+  // Store formatting primarily as inline CSS instead
+  // of old <font> tags where the browser supports it.
+
+  try {
+
+    document.execCommand(
+      "styleWithCSS",
+      false,
+      true
+    );
+
+  } catch (error) {
+
+    // Safe to ignore.
+
+  }
+
+
+  document.execCommand(
+    command,
+    false,
+    value
+  );
+
+
+  rememberEditorSelection();
+
+}
+
+
+// ------------------------------------------------------------
+// TRACK EDITOR SELECTION
+// ------------------------------------------------------------
+
+$("#editor")?.addEventListener(
+  "mouseup",
+  rememberEditorSelection
+);
+
+
+$("#editor")?.addEventListener(
+  "keyup",
+  rememberEditorSelection
+);
+
+
+$("#editor")?.addEventListener(
+  "input",
+  rememberEditorSelection
+);
+
+
+$("#editor")?.addEventListener(
+  "touchend",
+  rememberEditorSelection
+);
+
+
+// ------------------------------------------------------------
+// TOOLBAR SELECTION PRESERVATION
+// ------------------------------------------------------------
+
+$("#toolbar")?.addEventListener(
+  "mousedown",
+  event => {
+
+    if (
+      event.target.closest(
+        "button, select"
+      )
+    ) {
+
+      rememberEditorSelection();
+
+    }
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// TOOLBAR BUTTONS
+// ------------------------------------------------------------
+
+$("#toolbar")?.addEventListener(
+  "click",
+  event => {
+
+    const button =
+      event.target.closest(
+        "button"
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    event.preventDefault();
+
+
+    const command =
+      button.dataset.cmd;
+
+
+    const value =
+      button.dataset.value ||
+      null;
+
+
+    if (!command) {
+      return;
+    }
+
+
+    if (
+      command ===
+      "createLink"
+    ) {
+
+      restoreEditorSelection();
+
+
+      const url =
+        prompt(
+          "Link URL (for example: https://example.com)"
+        );
+
+
+      if (!url) {
+        return;
+      }
+
+
+      let safeUrl =
+        url.trim();
+
+
+      // If the editor types example.com rather than
+      // https://example.com, automatically add HTTPS.
+
+      if (
+        safeUrl &&
+        !/^https?:\/\//i.test(
+          safeUrl
+        ) &&
+        !/^mailto:/i.test(
+          safeUrl
+        )
+      ) {
+
+        safeUrl =
+          `https://${safeUrl}`;
+
+      }
+
+
+      runEditorCommand(
+        "createLink",
+        safeUrl
+      );
+
+      return;
+
+    }
+
+
+    runEditorCommand(
+      command,
+      value
+    );
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// FONT FAMILY
+// ------------------------------------------------------------
+
+$("#fontFamilySelect")?.addEventListener(
+  "change",
+  event => {
+
+    const value =
+      event.target.value;
+
+
+    if (value) {
+
+      runEditorCommand(
+        "fontName",
+        value
+      );
+
+    }
+
+
+    event.target.selectedIndex =
+      0;
+
+  }
+);
+
+
+// ------------------------------------------------------------
+// FONT SIZE
+// ------------------------------------------------------------
+
+$("#fontSizeSelect")?.addEventListener(
+  "change",
+  event => {
+
+    const value =
+      event.target.value;
+
+
+    if (value) {
+
+      runEditorCommand(
+        "fontSize",
+        value
+      );
+
+    }
+
+
+    event.target.selectedIndex =
+      0;
+
+  }
+);
+
+
+// ============================================================
+// FEATURED ARTICLE ORDER
+// ============================================================
 
 function renderFeatured() {
-  if (!['editor','admin'].includes(currentProfile?.role)) return;
-  const published=allArticles.filter(a=>a.status==='published').sort((a,b)=>(a.featured_rank??999)-(b.featured_rank??999) || new Date(b.published_at)-new Date(a.published_at));
-  $('#featuredList').innerHTML=published.map(a=>`<div class="drag-item" draggable="true" data-id="${a.id}"><span class="drag-handle">☰</span><span>${esc(a.title)}</span></div>`).join('') || '<div class="empty">Publish an article first.</div>';
+
+  if (
+    ![
+      "editor",
+      "admin"
+    ].includes(
+      currentProfile?.role
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const featuredList =
+    $("#featuredList");
+
+
+  if (!featuredList) {
+    return;
+  }
+
+
+  const publishedArticles =
+    allArticles
+      .filter(
+        article =>
+          article.status ===
+          "published"
+      )
+      .sort(
+        (articleA, articleB) => {
+
+          const rankDifference =
+            (
+              articleA.featured_rank ??
+              999
+            ) -
+            (
+              articleB.featured_rank ??
+              999
+            );
+
+
+          if (rankDifference !== 0) {
+
+            return rankDifference;
+
+          }
+
+
+          return (
+            new Date(
+              articleB.published_at ||
+              0
+            ) -
+            new Date(
+              articleA.published_at ||
+              0
+            )
+          );
+
+        }
+      );
+
+
+  featuredList.innerHTML =
+    publishedArticles
+      .map(
+        article => `
+
+          <div
+            class="drag-item"
+            draggable="true"
+            data-id="${article.id}"
+          >
+
+            <span class="drag-handle">
+              ☰
+            </span>
+
+            <span>
+              ${esc(article.title)}
+            </span>
+
+          </div>
+
+        `
+      )
+      .join("") ||
+
+      `
+        <div class="empty">
+          Publish an article first.
+        </div>
+      `;
+
+
   setupDrag();
+
 }
+
+
+// ------------------------------------------------------------
+// DRAG AND DROP
+// ------------------------------------------------------------
 
 function setupDrag() {
-  const list=$('#featuredList'); let dragging=null;
-  $$('.drag-item').forEach(item=>{
-    item.addEventListener('dragstart',()=>{dragging=item; item.classList.add('dragging');});
-    item.addEventListener('dragend',()=>{item.classList.remove('dragging'); dragging=null;});
-  });
-  list.addEventListener('dragover',e=>{
-    e.preventDefault(); if(!dragging) return;
-    const siblings=[...list.querySelectorAll('.drag-item:not(.dragging)')];
-    const next=siblings.find(s=>e.clientY <= s.getBoundingClientRect().top+s.offsetHeight/2);
-    list.insertBefore(dragging,next||null);
-  });
+
+  const list =
+    $("#featuredList");
+
+
+  if (!list) {
+    return;
+  }
+
+
+  let dragging =
+    null;
+
+
+  $$(".drag-item").forEach(
+    item => {
+
+      item.addEventListener(
+        "dragstart",
+        () => {
+
+          dragging =
+            item;
+
+          item.classList.add(
+            "dragging"
+          );
+
+        }
+      );
+
+
+      item.addEventListener(
+        "dragend",
+        () => {
+
+          item.classList.remove(
+            "dragging"
+          );
+
+          dragging =
+            null;
+
+        }
+      );
+
+    }
+  );
+
+
+  list.addEventListener(
+    "dragover",
+    event => {
+
+      event.preventDefault();
+
+
+      if (!dragging) {
+        return;
+      }
+
+
+      const siblings = [
+        ...list.querySelectorAll(
+          ".drag-item:not(.dragging)"
+        )
+      ];
+
+
+      const nextSibling =
+        siblings.find(
+          sibling =>
+            event.clientY <=
+            (
+              sibling
+                .getBoundingClientRect()
+                .top +
+              sibling.offsetHeight /
+                2
+            )
+        );
+
+
+      list.insertBefore(
+        dragging,
+        nextSibling ||
+        null
+      );
+
+    }
+  );
+
 }
 
-$('#saveFeaturedBtn')?.addEventListener('click', async()=>{
-  const ids=$$('#featuredList .drag-item').map(x=>x.dataset.id);
-  setStatus('Saving featured order…');
-  for (let i=0;i<ids.length;i++) {
-    const { error }=await VT.supabase.from('articles').update({featured_rank:i+1}).eq('id',ids[i]);
-    if(error) return setStatus(error.message);
+
+// ------------------------------------------------------------
+// SAVE FEATURED ORDER
+// ------------------------------------------------------------
+
+$("#saveFeaturedBtn")?.addEventListener(
+  "click",
+  async () => {
+
+    const ids =
+      $$("#featuredList .drag-item")
+        .map(
+          item =>
+            item.dataset.id
+        );
+
+
+    setStatus(
+      "Saving featured order…"
+    );
+
+
+    for (
+      let index = 0;
+      index < ids.length;
+      index++
+    ) {
+
+      const {
+        error
+      } =
+        await VT.supabase
+          .from("articles")
+          .update({
+            featured_rank:
+              index + 1
+          })
+          .eq(
+            "id",
+            ids[index]
+          );
+
+
+      if (error) {
+
+        console.error(
+          "Featured order error:",
+          error
+        );
+
+        setStatus(
+          error.message
+        );
+
+        return;
+
+      }
+
+    }
+
+
+    setStatus(
+      "Featured order saved."
+    );
+
+
+    await refreshArticles();
+
   }
-  setStatus('Featured order saved.');
-  await refreshArticles();
-});
+);
