@@ -6,7 +6,91 @@ let currentUser = null;
 let currentProfile = null;
 let currentArticleId = null;
 let allArticles = [];
+// Remember the selected text inside the article editor
+let savedEditorRange = null;
 
+function rememberEditorSelection() {
+  const editor = document.querySelector('#editor');
+  const selection = window.getSelection();
+
+  if (!editor || !selection || !selection.rangeCount) return;
+
+  const range = selection.getRangeAt(0);
+
+  if (editor.contains(range.commonAncestorContainer)) {
+    savedEditorRange = range.cloneRange();
+  }
+}
+
+function restoreEditorSelection() {
+  if (!savedEditorRange) return;
+
+  const selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.addRange(savedEditorRange);
+}
+
+// Remember selections made inside the editor
+document.querySelector('#editor')?.addEventListener(
+  'mouseup',
+  rememberEditorSelection
+);
+
+document.querySelector('#editor')?.addEventListener(
+  'keyup',
+  rememberEditorSelection
+);
+
+// Save selection before opening dropdown
+document.querySelector('#fontFamilySelect')?.addEventListener(
+  'mousedown',
+  rememberEditorSelection
+);
+
+document.querySelector('#fontSizeSelect')?.addEventListener(
+  'mousedown',
+  rememberEditorSelection
+);
+
+// Change font
+document.querySelector('#fontFamilySelect')?.addEventListener(
+  'change',
+  e => {
+    if (!e.target.value) return;
+
+    restoreEditorSelection();
+
+    document.execCommand(
+      'fontName',
+      false,
+      e.target.value
+    );
+
+    document.querySelector('#editor').focus();
+
+    e.target.selectedIndex = 0;
+  }
+);
+
+// Change font size
+document.querySelector('#fontSizeSelect')?.addEventListener(
+  'change',
+  e => {
+    if (!e.target.value) return;
+
+    restoreEditorSelection();
+
+    document.execCommand(
+      'fontSize',
+      false,
+      e.target.value
+    );
+
+    document.querySelector('#editor').focus();
+
+    e.target.selectedIndex = 0;
+  }
+);
 if (!window.VT.configured) {
   showLoginNotice('Before the newsroom can work, copy js/config.example.js to js/config.js and add your Supabase URL and anon key.', true);
 } else {
