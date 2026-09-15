@@ -10,7 +10,7 @@ async function loadArticle() {
   const { data:a, error } = await VT.supabase.from('articles').select('*').eq('slug',slug).eq('status','published').maybeSingle();
   if (error || !a) return showError('Article not found or not yet published.');
 
-  document.title = `${a.title} | Vox Templari`;
+  document.title = `${article.title} | Vox Templari`;
   $('#category').textContent = a.category || '';
   $('#title').textContent = a.title;
   $('#deck').textContent = a.excerpt || '';
