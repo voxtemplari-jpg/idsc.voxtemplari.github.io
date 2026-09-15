@@ -38,14 +38,8 @@ button { cursor: pointer; }
 .header-row { display:flex; align-items:center; justify-content:space-between; gap:24px; min-height:76px; }
 .brand { display:flex; align-items:center; gap:14px; }
 .brand-mark {
-  width: 72px;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: transparent;
+  width: 42px; height: 42px; border:2px solid var(--gold); border-radius:50%;
+  display:grid; place-items:center; font-family: Georgia, serif; font-weight:800; color:var(--gold);
 }
 .brand-title { font-family: Georgia, 'Times New Roman', serif; font-size:1.35rem; font-weight:800; letter-spacing:.02em; }
 .brand-sub { font-size:.72rem; opacity:.78; text-transform:uppercase; letter-spacing:.12em; }
@@ -123,24 +117,25 @@ button { cursor: pointer; }
 label { font-weight:700; font-size:.9rem; }
 input, select, textarea { width:100%; border:1px solid #cbd4ce; border-radius:9px; background:#fff; padding:10px 12px; }
 textarea { min-height:110px; resize:vertical; }
-.editor-toolbar { display:flex; flex-wrap:wrap; gap:5px; padding:8px; border:1px solid #cbd4ce; border-bottom:0; border-radius:9px 9px 0 0; background:#f5f7f5; }
-.editor-toolbar button { border:1px solid #d5ddd8; border-radius:6px; background:#fff; padding:6px 9px; }
-.editor-toolbar .editor-select {
-  width: auto;
-  min-width: 105px;
-  padding: 6px 9px;
-  border: 1px solid #d5ddd8;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.editor-toolbar .editor-select:focus {
-  outline: 2px solid rgba(13, 75, 53, 0.18);
-}
-.rich-editor { min-height:340px; padding:14px; border:1px solid #cbd4ce; border-radius:0 0 9px 9px; background:#fff; overflow:auto; }
+.editor-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:5px; padding:8px; border:1px solid #cbd4ce; border-bottom:0; border-radius:9px 9px 0 0; background:#f5f7f5; position:sticky; top:0; z-index:3; }
+.editor-toolbar button { min-width:34px; border:1px solid #d5ddd8; border-radius:6px; background:#fff; padding:6px 9px; line-height:1.2; }
+.editor-toolbar button:hover, .editor-toolbar button:focus-visible { border-color:#91a59a; background:#eef4f0; }
+.editor-toolbar button[data-cmd="justifyCenter"] { text-align:center; }
+.editor-toolbar button[data-cmd="justifyRight"] { text-align:right; }
+.editor-select { width:auto; min-width:92px; max-width:170px; padding:6px 28px 6px 9px; border:1px solid #d5ddd8; border-radius:6px; background:#fff; }
+.editor-font { min-width:128px; }
+.editor-size { min-width:92px; }
+.toolbar-separator { width:1px; height:26px; margin:0 3px; background:#d5ddd8; }
+.rich-editor { min-height:340px; padding:18px; border:1px solid #cbd4ce; border-radius:0 0 9px 9px; background:#fff; overflow:auto; font-family:Georgia, 'Times New Roman', serif; font-size:1.05rem; line-height:1.75; }
 .rich-editor:focus { outline:2px solid rgba(13,75,53,.2); }
+.rich-editor h2, .rich-editor h3 { line-height:1.2; }
+.rich-editor blockquote { border-left:4px solid var(--gold); margin:1.4em 0; padding:2px 0 2px 18px; color:#48504b; font-style:italic; }
+@media (max-width: 700px) {
+  .editor-toolbar { position:static; }
+  .toolbar-separator { display:none; }
+  .editor-font { flex:1 1 135px; }
+  .editor-size { flex:1 1 100px; }
+}
 .actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
 .btn { border:0; border-radius:9px; padding:10px 15px; font-weight:800; }
 .btn-primary { background:var(--green); color:white; }
