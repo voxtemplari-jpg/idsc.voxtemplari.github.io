@@ -13,7 +13,36 @@
 <div class="field full"><label>Deck / excerpt</label><textarea id="excerptInput" maxlength="420" placeholder="1–2 sentence summary shown on the homepage"></textarea></div>
 <div class="field"><label>Featured image</label><input id="imageFile" type="file" accept="image/*"><input id="imageUrlInput" type="url" placeholder="or paste an image URL"></div>
 <div class="field"><label>Image alt text</label><input id="imageAltInput" placeholder="Describe the image for accessibility"></div>
-<div class="field full"><label>Article body</label><div id="toolbar" class="editor-toolbar"><button data-cmd="bold"><b>B</b></button><button data-cmd="italic"><i>I</i></button><button data-cmd="formatBlock" data-value="h2">H2</button><button data-cmd="formatBlock" data-value="h3">H3</button><button data-cmd="insertUnorderedList">• List</button><button data-cmd="formatBlock" data-value="blockquote">Quote</button><button data-cmd="createLink">Link</button><button data-cmd="removeFormat">Clear</button></div><div id="editor" class="rich-editor" contenteditable="true"></div></div>
+<div class="field full"><label>Article body</label><div id="toolbar" class="editor-toolbar">
+
+  <select id="fontFamilySelect" class="editor-select" aria-label="Font">
+    <option value="">Font</option>
+    <option value="Georgia">Georgia</option>
+    <option value="Times New Roman">Times New Roman</option>
+    <option value="Arial">Arial</option>
+    <option value="Verdana">Verdana</option>
+    <option value="Trebuchet MS">Trebuchet MS</option>
+  </select>
+
+  <select id="fontSizeSelect" class="editor-select" aria-label="Text size">
+    <option value="">Size</option>
+    <option value="2">Small</option>
+    <option value="3">Normal</option>
+    <option value="4">Medium</option>
+    <option value="5">Large</option>
+    <option value="6">Extra Large</option>
+  </select>
+
+  <button data-cmd="bold"><b>B</b></button>
+  <button data-cmd="italic"><i>I</i></button>
+  <button data-cmd="formatBlock" data-value="h2">H2</button>
+  <button data-cmd="formatBlock" data-value="h3">H3</button>
+  <button data-cmd="insertUnorderedList">• List</button>
+  <button data-cmd="formatBlock" data-value="blockquote">Quote</button>
+  <button data-cmd="createLink">Link</button>
+  <button data-cmd="removeFormat">Clear</button>
+
+</div><div id="editor" class="rich-editor" contenteditable="true"></div></div>
 </div><div class="actions" style="margin-top:16px"><button id="saveDraftBtn" type="button" class="btn btn-secondary">Save draft</button><button id="publishBtn" type="button" class="btn btn-gold">Publish</button><button type="submit" class="btn btn-primary">Save changes</button><span id="saveStatus" class="status"></span></div></form></section>
 <section id="articles" class="panel"><h2>Articles</h2><div id="articleList" class="article-list"></div></section>
 <section id="featuredPanel" class="panel"><h2>Featured story order</h2><p class="status">Drag stories into the order you want. The first item becomes the lead story.</p><div id="featuredList" class="drag-list"></div><button id="saveFeaturedBtn" class="btn btn-primary" style="margin-top:12px">Save featured order</button></section>
