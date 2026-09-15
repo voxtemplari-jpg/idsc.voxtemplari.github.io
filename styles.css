@@ -38,8 +38,14 @@ button { cursor: pointer; }
 .header-row { display:flex; align-items:center; justify-content:space-between; gap:24px; min-height:76px; }
 .brand { display:flex; align-items:center; gap:14px; }
 .brand-mark {
-  width: 42px; height: 42px; border:2px solid var(--gold); border-radius:50%;
-  display:grid; place-items:center; font-family: Georgia, serif; font-weight:800; color:var(--gold);
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: transparent;
 }
 .brand-title { font-family: Georgia, 'Times New Roman', serif; font-size:1.35rem; font-weight:800; letter-spacing:.02em; }
 .brand-sub { font-size:.72rem; opacity:.78; text-transform:uppercase; letter-spacing:.12em; }
