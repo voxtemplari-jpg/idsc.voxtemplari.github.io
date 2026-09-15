@@ -13,7 +13,8 @@
 <div class="field full"><label>Deck / excerpt</label><textarea id="excerptInput" maxlength="420" placeholder="1–2 sentence summary shown on the homepage"></textarea></div>
 <div class="field"><label>Featured image</label><input id="imageFile" type="file" accept="image/*"><input id="imageUrlInput" type="url" placeholder="or paste an image URL"></div>
 <div class="field"><label>Image alt text</label><input id="imageAltInput" placeholder="Describe the image for accessibility"></div>
-<div class="field full"><label>Article body</label><div id="toolbar" class="editor-toolbar">
+<div class="field full"><label>Article body</label>
+<div id="toolbar" class="editor-toolbar">
 
   <select id="fontFamilySelect" class="editor-select" aria-label="Font">
     <option value="">Font</option>
@@ -41,6 +42,8 @@
   <button data-cmd="formatBlock" data-value="blockquote">Quote</button>
   <button data-cmd="createLink">Link</button>
   <button data-cmd="removeFormat">Clear</button>
+
+</div>
 
 </div><div id="editor" class="rich-editor" contenteditable="true"></div></div>
 </div><div class="actions" style="margin-top:16px"><button id="saveDraftBtn" type="button" class="btn btn-secondary">Save draft</button><button id="publishBtn" type="button" class="btn btn-gold">Publish</button><button type="submit" class="btn btn-primary">Save changes</button><span id="saveStatus" class="status"></span></div></form></section>
