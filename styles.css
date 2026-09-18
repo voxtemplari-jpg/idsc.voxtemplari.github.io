@@ -39,9 +39,9 @@ button { cursor: pointer; }
 .brand { display:flex; align-items:center; gap:14px; }
 .brand-mark {
   width: 42px; height: 42px; border:2px solid var(--gold); border-radius:50%;
-  display:grid; place-items:center; font-family: Trajan, serif; font-weight:800; color:var(--gold);
+  display:grid; place-items:center; font-family: Trajan Pro, serif; font-weight:800; color:var(--gold);
 }
-.brand-title { font-family: Trajan, 'Times New Roman', serif; font-size:1.35rem; font-weight:800; letter-spacing:.02em; }
+.brand-title { font-family: Trajan Pro, 'Times New Roman', serif; font-size:1.35rem; font-weight:800; letter-spacing:.02em; }
 .brand-sub { font-size:.72rem; opacity:.78; text-transform:uppercase; letter-spacing:.12em; }
 .nav { display:flex; flex-wrap:wrap; align-items:center; gap:16px; font-size:.92rem; }
 .nav a:hover { color:var(--gold); }
@@ -49,7 +49,7 @@ button { cursor: pointer; }
 .mobile-menu { display:none; background:none; border:0; color:#fff; font-size:1.45rem; }
 
 .masthead { padding:48px 0 22px; border-bottom:1px solid var(--line); }
-.masthead h1 { margin:0; font-family:Georgia,serif; font-size:clamp(2.7rem, 7vw, 6.5rem); line-height:.9; letter-spacing:-.04em; }
+.masthead h1 { margin:0; font-family:Trajan Pro,serif; font-size:clamp(2.7rem, 7vw, 6.5rem); line-height:.9; letter-spacing:-.04em; }
 .masthead p { margin:16px 0 0; max-width:680px; color:var(--muted); }
 .section-kicker { display:flex; align-items:center; gap:12px; font-size:.8rem; letter-spacing:.16em; font-weight:800; text-transform:uppercase; color:var(--green); }
 .section-kicker::after { content:""; height:1px; background:var(--line); flex:1; }
