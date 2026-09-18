@@ -43,11 +43,10 @@ jobs:
             --exclude='.github' \
             --exclude='node_modules' \
             ./ _site/
-
       - name: Generate static article pages
         env:
-          SITE_DIR: _site
-          SITE_URL: ${{ vars.SITE_URL || 'https://voxtemplari-jpg.github.io/voxtemplari' }}
+            SITE_DIR: _site
+            SITE_URL: https://voxtemplari.idsc.edu.ph
         run: node scripts/generate-articles.mjs
 
       - name: Upload Pages artifact
