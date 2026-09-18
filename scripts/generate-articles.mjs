@@ -191,11 +191,13 @@ for (const article of articles) {
 }
 
 console.log(`Generated ${articles.length} static article page(s).`);
+}
 articles.sort(
   (a, b) =>
     new Date(b.published_at || 0) -
     new Date(a.published_at || 0)
 );
+}
 for (
   let index = 0;
   index < articles.length;
