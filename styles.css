@@ -39,9 +39,9 @@ button { cursor: pointer; }
 .brand { display:flex; align-items:center; gap:14px; }
 .brand-mark {
   width: 42px; height: 42px; border:2px solid var(--gold); border-radius:50%;
-  display:grid; place-items:center; font-family: Georgia, serif; font-weight:800; color:var(--gold);
+  display:grid; place-items:center; font-family: Trajan, serif; font-weight:800; color:var(--gold);
 }
-.brand-title { font-family: Georgia, 'Times New Roman', serif; font-size:1.35rem; font-weight:800; letter-spacing:.02em; }
+.brand-title { font-family: Trajan, 'Times New Roman', serif; font-size:1.35rem; font-weight:800; letter-spacing:.02em; }
 .brand-sub { font-size:.72rem; opacity:.78; text-transform:uppercase; letter-spacing:.12em; }
 .nav { display:flex; flex-wrap:wrap; align-items:center; gap:16px; font-size:.92rem; }
 .nav a:hover { color:var(--gold); }
