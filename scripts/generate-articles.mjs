@@ -123,8 +123,9 @@ function page(article) {
   <header class="site-header">
     <div class="container header-row">
       <a class="brand" href="${SITE_URL}/">
-        <div class="brand-mark">VT</div>
-        <div>
+        <div class="brand-mark">
+         <img src="assets/vox-templari-logo.png" alt="Vox Templari Logo">
+        </div>
           <div class="brand-title">Vox Templari</div>
           <div class="brand-sub">Official Student Publication</div>
         </div>
