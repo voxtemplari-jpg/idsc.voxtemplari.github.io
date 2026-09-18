@@ -178,3 +178,290 @@ textarea { min-height:110px; resize:vertical; }
   .field.full { grid-column:auto; }
   .admin-main { padding:15px; }
 }
+/* ============================================================
+   VOX TEMPLARI
+   HEADER + BRAND LOGO FIX
+   Paste this entire section at the VERY BOTTOM of styles.css
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   MAIN HEADER
+   ------------------------------------------------------------ */
+
+.site-header {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  position: relative;
+  z-index: 100;
+}
+
+
+/* ------------------------------------------------------------
+   HEADER INNER ROW
+   Keeps logo/brand on LEFT and navigation on RIGHT
+   ------------------------------------------------------------ */
+
+.site-header .header-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin: 0 auto;
+}
+
+
+/* ------------------------------------------------------------
+   BRAND
+   ------------------------------------------------------------ */
+
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: 12px;
+
+  margin: 0 !important;
+  padding: 0;
+
+  text-align: left;
+
+  text-decoration: none;
+
+  flex: 0 0 auto;
+}
+
+
+/* ------------------------------------------------------------
+   LOGO HOLDER
+   ------------------------------------------------------------ */
+
+.site-header .brand-mark {
+  width: 58px;
+  height: 58px;
+
+  min-width: 58px;
+  min-height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 !important;
+  padding: 0;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+
+  background: transparent;
+
+  flex: 0 0 58px;
+}
+
+
+/* ------------------------------------------------------------
+   ACTUAL LOGO IMAGE
+   ------------------------------------------------------------ */
+
+.site-header .brand-mark img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: contain;
+
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ------------------------------------------------------------
+   PUBLICATION NAME
+   ------------------------------------------------------------ */
+
+.site-header .brand-title {
+  margin: 0;
+  padding: 0;
+
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.15;
+
+  color: #111111;
+
+  text-align: left;
+}
+
+
+/* ------------------------------------------------------------
+   PUBLICATION SUBTITLE
+   ------------------------------------------------------------ */
+
+.site-header .brand-sub {
+  margin-top: 3px;
+  padding: 0;
+
+  font-size: 0.78rem;
+  line-height: 1.2;
+
+  color: #666666;
+
+  text-align: left;
+}
+
+
+/* ------------------------------------------------------------
+   NAVIGATION
+   ------------------------------------------------------------ */
+
+.site-header .nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 20px;
+
+  margin-left: auto;
+}
+
+
+.site-header .nav a {
+  text-decoration: none;
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE MENU BUTTON
+   ------------------------------------------------------------ */
+
+.site-header .mobile-menu {
+  margin-left: auto;
+}
+
+
+/* ============================================================
+   MOBILE HEADER
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  .site-header .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+  }
+
+
+  .site-header .brand {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    margin: 0 !important;
+
+    max-width: calc(100% - 60px);
+  }
+
+
+  .site-header .brand-mark {
+    width: 48px;
+    height: 48px;
+
+    min-width: 48px;
+    min-height: 48px;
+
+    flex: 0 0 48px;
+
+    margin: 0 !important;
+  }
+
+
+  .site-header .brand-title {
+    font-size: 1rem;
+  }
+
+
+  .site-header .brand-sub {
+    font-size: 0.7rem;
+  }
+
+
+  .site-header .mobile-menu {
+    display: block;
+
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+
+  .site-header .nav {
+    position: absolute;
+
+    top: 100%;
+    left: 0;
+    right: 0;
+
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 0;
+
+    padding: 12px 20px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+
+  .site-header .nav.open {
+    display: flex;
+  }
+
+
+  .site-header .nav a {
+    width: 100%;
+
+    padding: 10px 0;
+  }
+
+}
+
+
+/* ============================================================
+   VERY SMALL SCREENS
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+  .site-header .brand-mark {
+    width: 42px;
+    height: 42px;
+
+    min-width: 42px;
+    min-height: 42px;
+
+    flex-basis: 42px;
+  }
+
+
+  .site-header .brand-title {
+    font-size: 0.95rem;
+  }
+
+
+  .site-header .brand-sub {
+    font-size: 0.65rem;
+  }
+
+}
