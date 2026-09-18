@@ -1,7 +1,360 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Article | Vox Templari</title><link rel="stylesheet" href="styles.css"></head>
-<body><header class="site-header"><div class="container header-row"><a class="brand" href="index.html"><div class="brand-mark">
-  <img src="assets/vox-templari-logo.png" alt="Vox Templari Logo">
-</div><div><div class="brand-title">Vox Templari</div><div class="brand-sub">Official Student Publication</div></div></a><button id="menuBtn" class="mobile-menu" aria-label="Open menu">☰</button><nav id="mainNav" class="nav"><a href="index.html">Home</a><a href="index.html#latest">Latest</a><a class="nav-admin" href="admin.html">Newsroom Login</a></nav></div></header>
-<main id="article"><div class="article-shell"><div id="category" class="article-category"></div><h1 id="title">Loading…</h1><div id="deck" class="article-deck"></div><div id="byline" class="byline"></div></div><img id="hero" class="article-hero hidden" alt=""><div class="article-shell"><article id="body" class="article-body"></article></div></main>
-<footer class="site-footer"><div class="container"><div class="footer-title">Vox Templari</div><p class="footer-small">IDSCian stories preserved in every page.</p></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script><script src="js/config.js"></script><script src="js/supabase-client.js"></script><script src="js/article.js"></script></body></html>
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+
+  <!-- ======================================================
+       PAGE TITLE
+       JavaScript replaces this with the article headline.
+       ====================================================== -->
+
+  <title>Article | Vox Templari</title>
+
+
+  <!-- ======================================================
+       STANDARD SEO META
+       ====================================================== -->
+
+  <meta
+    id="metaDescription"
+    name="description"
+    content="Read the latest stories from Vox Templari, the Official Student Publication."
+  >
+
+  <meta
+    id="metaAuthor"
+    name="author"
+    content="Vox Templari"
+  >
+
+
+  <!-- ======================================================
+       OPEN GRAPH
+       Used by Facebook, Messenger, Discord, LinkedIn, etc.
+       ====================================================== -->
+
+  <meta
+    id="ogTitle"
+    property="og:title"
+    content="Vox Templari"
+  >
+
+  <meta
+    id="ogDescription"
+    property="og:description"
+    content="The Official Student Publication."
+  >
+
+  <meta
+    id="ogImage"
+    property="og:image"
+    content=""
+  >
+
+  <meta
+    id="ogImageAlt"
+    property="og:image:alt"
+    content="Vox Templari"
+  >
+
+  <meta
+    id="ogUrl"
+    property="og:url"
+    content=""
+  >
+
+  <meta
+    property="og:type"
+    content="article"
+  >
+
+  <meta
+    property="og:site_name"
+    content="Vox Templari"
+  >
+
+
+  <!-- ======================================================
+       ARTICLE-SPECIFIC OPEN GRAPH DATA
+       ====================================================== -->
+
+  <meta
+    id="articlePublishedTime"
+    property="article:published_time"
+    content=""
+  >
+
+  <meta
+    id="articleModifiedTime"
+    property="article:modified_time"
+    content=""
+  >
+
+  <meta
+    id="articleAuthor"
+    property="article:author"
+    content=""
+  >
+
+  <meta
+    id="articleSection"
+    property="article:section"
+    content=""
+  >
+
+
+  <!-- ======================================================
+       X / TWITTER CARD
+       ====================================================== -->
+
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
+  >
+
+  <meta
+    id="twitterTitle"
+    name="twitter:title"
+    content="Vox Templari"
+  >
+
+  <meta
+    id="twitterDescription"
+    name="twitter:description"
+    content="The Official Student Publication."
+  >
+
+  <meta
+    id="twitterImage"
+    name="twitter:image"
+    content=""
+  >
+
+  <meta
+    id="twitterImageAlt"
+    name="twitter:image:alt"
+    content="Vox Templari"
+  >
+
+
+  <!-- ======================================================
+       CANONICAL ARTICLE URL
+       ====================================================== -->
+
+  <link
+    id="canonicalLink"
+    rel="canonical"
+    href=""
+  >
+
+
+  <!-- WEBSITE CSS -->
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+</head>
+
+
+<body>
+
+
+  <!-- ======================================================
+       SITE HEADER
+       ====================================================== -->
+
+  <header class="site-header">
+
+    <div class="container header-row">
+
+      <a
+        class="brand"
+        href="index.html"
+      >
+
+        <div class="brand-mark">
+          VT
+        </div>
+
+        <div>
+
+          <div class="brand-title">
+            Vox Templari
+          </div>
+
+          <div class="brand-sub">
+            Official Student Publication
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <button
+        id="menuBtn"
+        class="mobile-menu"
+        type="button"
+        aria-label="Open menu"
+      >
+        ☰
+      </button>
+
+
+      <nav
+        id="mainNav"
+        class="nav"
+      >
+
+        <a href="index.html">
+          Home
+        </a>
+
+        <a href="index.html#latest">
+          Latest
+        </a>
+
+        <a
+          class="nav-admin"
+          href="admin.html"
+        >
+          Newsroom Login
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+
+  <!-- ======================================================
+       ARTICLE
+       ====================================================== -->
+
+  <main id="article">
+
+    <div class="article-shell">
+
+
+      <!-- CATEGORY -->
+
+      <div
+        id="category"
+        class="article-category"
+      ></div>
+
+
+      <!-- HEADLINE -->
+
+      <h1 id="title">
+        Loading…
+      </h1>
+
+
+      <!-- DECK / EXCERPT -->
+
+      <div
+        id="deck"
+        class="article-deck"
+      ></div>
+
+
+      <!-- BYLINE -->
+
+      <div
+        id="byline"
+        class="byline"
+      ></div>
+
+    </div>
+
+
+    <!-- FEATURED IMAGE -->
+
+    <img
+      id="hero"
+      class="article-hero hidden"
+      src=""
+      alt=""
+    >
+
+
+    <!-- ARTICLE BODY -->
+
+    <div class="article-shell">
+
+      <article
+        id="body"
+        class="article-body"
+      ></article>
+
+    </div>
+
+  </main>
+
+
+  <!-- ======================================================
+       FOOTER
+       ====================================================== -->
+
+  <footer class="site-footer">
+
+    <div class="container">
+
+      <div class="footer-title">
+        Vox Templari
+      </div>
+
+      <p class="footer-small">
+        Student journalism preserved beyond every editorial term.
+      </p>
+
+    </div>
+
+  </footer>
+
+
+  <!-- ======================================================
+       SCRIPTS
+       ====================================================== -->
+
+  <!-- Supabase -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <!-- DOMPurify prevents saved article HTML from executing scripts -->
+
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+
+
+  <!-- Your website configuration -->
+
+  <script src="js/config.js"></script>
+
+
+  <!-- Supabase client -->
+
+  <script src="js/supabase-client.js"></script>
+
+
+  <!-- Article loader -->
+
+  <script src="js/article.js"></script>
+
+
+</body>
+
+</html>
