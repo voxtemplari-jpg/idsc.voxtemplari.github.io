@@ -126,7 +126,7 @@ function page(article) {
       <a class="brand" href="${SITE_URL}/">
     <div class="brand-mark">
       <img
-        src="${SITE_URL}/assets/vt-logo.jpg"
+        src="${SITE_URL}/assets/vox-templari-logo.png"
         alt="Vox Templari Logo"
       >
     </div>
