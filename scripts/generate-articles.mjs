@@ -191,3 +191,120 @@ for (const article of articles) {
 }
 
 console.log(`Generated ${articles.length} static article page(s).`);
+articles.sort(
+  (a, b) =>
+    new Date(b.published_at || 0) -
+    new Date(a.published_at || 0)
+);
+for (
+  let index = 0;
+  index < articles.length;
+  index++
+) {
+
+  const article =
+    articles[index];
+
+  const newerArticle =
+    index > 0
+      ? articles[index - 1]
+      : null;
+
+  const olderArticle =
+    index < articles.length - 1
+      ? articles[index + 1]
+      : null;
+
+
+  generateArticlePage(
+    article,
+    olderArticle,
+    newerArticle
+  );
+
+}
+function createArticleNavigation(
+  previousArticle,
+  nextArticle
+) {
+
+  const previousHtml =
+    previousArticle
+
+      ? `
+        <a
+          class="article-nav-item article-nav-prev"
+          href="${SITE_URL}/articles/${encodeURIComponent(
+            previousArticle.slug
+          )}/"
+        >
+
+          <span class="article-nav-label">
+            ← Previous Article
+          </span>
+
+          <strong>
+            ${esc(previousArticle.title)}
+          </strong>
+
+        </a>
+      `
+
+      : `
+        <div
+          class="article-nav-item article-nav-empty"
+        ></div>
+      `;
+
+
+  const nextHtml =
+    nextArticle
+
+      ? `
+        <a
+          class="article-nav-item article-nav-next"
+          href="${SITE_URL}/articles/${encodeURIComponent(
+            nextArticle.slug
+          )}/"
+        >
+
+          <span class="article-nav-label">
+            Next Article →
+          </span>
+
+          <strong>
+            ${esc(nextArticle.title)}
+          </strong>
+
+        </a>
+      `
+
+      : `
+        <div
+          class="article-nav-item article-nav-empty"
+        ></div>
+      `;
+
+
+  return `
+
+    <div class="article-nav-inner">
+
+      ${previousHtml}
+
+
+      <a
+        class="article-nav-all"
+        href="${SITE_URL}/#latest"
+      >
+        All Stories
+      </a>
+
+
+      ${nextHtml}
+
+    </div>
+
+  `;
+
+}
