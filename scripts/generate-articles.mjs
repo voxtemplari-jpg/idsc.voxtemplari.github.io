@@ -79,11 +79,17 @@ function page(article) {
   const author = article.author_name || 'Vox Templari';
   const category = article.category || 'News';
   const body = cleanBody(article.body_html || '');
-  const imageMeta = image ? `
+ const imageMeta = image ? `
   <meta property="og:image" content="${esc(image)}">
+  <meta property="og:image:secure_url" content="${esc(image)}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="${esc(article.image_alt || title)}">
+
   <meta name="twitter:image" content="${esc(image)}">
-  <meta name="twitter:image:alt" content="${esc(article.image_alt || title)}">` : '';
+  <meta name="twitter:image:alt" content="${esc(article.image_alt || title)}">`
+  : '';
   const hero = image ? `<img id="hero" class="article-hero" src="${esc(image)}" alt="${esc(article.image_alt || title)}">` : '';
 
   return `<!doctype html>
