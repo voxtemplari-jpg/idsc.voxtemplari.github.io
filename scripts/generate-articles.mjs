@@ -364,4 +364,678 @@ function page(
 
   const title =
     article.title ||
-    'Vox
+    'Vox Templari';
+
+
+  const description =
+    article.excerpt ||
+    'Read the latest story from Vox Templari.';
+
+
+  const author =
+    article.author_name ||
+    'Vox Templari';
+
+
+  const category =
+    article.category ||
+    'News';
+
+
+  const body =
+    cleanBody(
+      article.body_html ||
+      ''
+    );
+
+
+  // ----------------------------------------------------------
+  // SOCIAL IMAGE META
+  // ----------------------------------------------------------
+
+  const imageMeta =
+    image
+
+      ? `
+
+  <meta
+    property="og:image"
+    content="${esc(image)}"
+  >
+
+  <meta
+    property="og:image:secure_url"
+    content="${esc(image)}"
+  >
+
+  <meta
+    property="og:image:alt"
+    content="${esc(
+      article.image_alt ||
+      title
+    )}"
+  >
+
+  <meta
+    name="twitter:image"
+    content="${esc(image)}"
+  >
+
+  <meta
+    name="twitter:image:alt"
+    content="${esc(
+      article.image_alt ||
+      title
+    )}"
+  >
+
+`
+
+      : '';
+
+
+  // ----------------------------------------------------------
+  // HERO IMAGE
+  // ----------------------------------------------------------
+
+  const hero =
+    image
+
+      ? `
+
+    <img
+      id="hero"
+      class="article-hero"
+
+      src="${esc(image)}"
+
+      alt="${esc(
+        article.image_alt ||
+        title
+      )}"
+    >
+
+`
+
+      : '';
+
+
+  return `<!doctype html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+
+  <title>${esc(title)} | Vox Templari</title>
+
+
+  <meta
+    name="description"
+    content="${esc(description)}"
+  >
+
+  <meta
+    name="author"
+    content="${esc(author)}"
+  >
+
+
+  <!-- OPEN GRAPH -->
+
+  <meta
+    property="og:type"
+    content="article"
+  >
+
+  <meta
+    property="og:site_name"
+    content="Vox Templari"
+  >
+
+  <meta
+    property="og:title"
+    content="${esc(title)}"
+  >
+
+  <meta
+    property="og:description"
+    content="${esc(description)}"
+  >
+
+  <meta
+    property="og:url"
+    content="${esc(articleUrl)}"
+  >
+
+
+  ${imageMeta}
+
+
+  <meta
+    property="article:published_time"
+    content="${esc(
+      article.published_at ||
+      ''
+    )}"
+  >
+
+  <meta
+    property="article:modified_time"
+    content="${esc(
+      article.updated_at ||
+      article.published_at ||
+      ''
+    )}"
+  >
+
+  <meta
+    property="article:author"
+    content="${esc(author)}"
+  >
+
+  <meta
+    property="article:section"
+    content="${esc(category)}"
+  >
+
+
+  <!-- TWITTER / X -->
+
+  <meta
+    name="twitter:card"
+    content="summary_large_image"
+  >
+
+  <meta
+    name="twitter:title"
+    content="${esc(title)}"
+  >
+
+  <meta
+    name="twitter:description"
+    content="${esc(description)}"
+  >
+
+
+  <!-- CANONICAL -->
+
+  <link
+    rel="canonical"
+    href="${esc(articleUrl)}"
+  >
+
+
+  <!-- SITE CSS -->
+
+  <link
+    rel="stylesheet"
+    href="${SITE_URL}/styles.css"
+  >
+
+
+  <!-- STRUCTURED DATA -->
+
+  <script type="application/ld+json">
+    ${jsonLd(
+      article,
+      articleUrl,
+      image
+    )}
+  </script>
+
+</head>
+
+
+<body>
+
+
+  <!-- HEADER -->
+
+  <header class="site-header">
+
+    <div class="container header-row">
+
+
+      <a
+        class="brand"
+        href="${SITE_URL}/"
+      >
+
+        <div class="brand-mark">
+
+          <img
+            src="${SITE_URL}/assets/vox-templari-logo.png"
+            alt="Vox Templari Logo"
+          >
+
+        </div>
+
+
+        <div>
+
+          <div class="brand-title">
+            Vox Templari
+          </div>
+
+          <div class="brand-sub">
+            Official Student Publication
+          </div>
+
+        </div>
+
+      </a>
+
+
+      <button
+        id="menuBtn"
+        class="mobile-menu"
+        type="button"
+        aria-label="Open menu"
+      >
+        ☰
+      </button>
+
+
+      <nav
+        id="mainNav"
+        class="nav"
+      >
+
+        <a href="${SITE_URL}/">
+          Home
+        </a>
+
+        <a href="${SITE_URL}/#latest">
+          Latest
+        </a>
+
+        <a href="${SITE_URL}/about.html">
+          About Us
+        </a>
+
+      </nav>
+
+
+    </div>
+
+  </header>
+
+
+  <!-- ARTICLE -->
+
+  <main id="article">
+
+
+    <div class="article-shell">
+
+
+      <div class="article-category">
+        ${esc(category)}
+      </div>
+
+
+      <h1>
+        ${esc(title)}
+      </h1>
+
+
+      <div class="article-deck">
+        ${esc(description)}
+      </div>
+
+
+      <div class="byline">
+
+        By ${esc(author)}
+
+        ${
+          article.published_at
+            ? ` • ${esc(
+                niceDate(
+                  article.published_at
+                )
+              )}`
+            : ''
+        }
+
+      </div>
+
+
+    </div>
+
+
+    ${hero}
+
+
+    <div class="article-shell">
+
+      <article class="article-body">
+
+        ${body}
+
+      </article>
+
+    </div>
+
+
+    <!-- PREVIOUS / NEXT -->
+
+    <section class="article-navigation">
+
+      <div class="article-nav-inner">
+
+
+        ${navLink(
+          previousArticle,
+          'previous'
+        )}
+
+
+        <a
+          class="article-nav-all"
+          href="${SITE_URL}/#latest"
+        >
+          All Stories
+        </a>
+
+
+        ${navLink(
+          nextArticle,
+          'next'
+        )}
+
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+
+  <!-- FOOTER -->
+
+  <footer class="site-footer">
+
+    <div class="container">
+
+      <div class="footer-title">
+        Vox Templari
+      </div>
+
+      <p class="footer-small">
+        Student journalism preserved beyond every editorial term.
+      </p>
+
+    </div>
+
+  </footer>
+
+
+  <!-- MOBILE MENU -->
+
+  <script>
+
+    const menuBtn =
+      document.querySelector(
+        '#menuBtn'
+      );
+
+    const mainNav =
+      document.querySelector(
+        '#mainNav'
+      );
+
+
+    menuBtn?.addEventListener(
+      'click',
+      () => {
+
+        mainNav?.classList.toggle(
+          'open'
+        );
+
+      }
+    );
+
+  </script>
+
+
+</body>
+
+</html>`;
+
+}
+
+
+// ============================================================
+// LOAD CONFIG
+// ============================================================
+
+const {
+  url: supabaseUrl,
+  key
+} =
+  readConfig();
+
+
+// ============================================================
+// FETCH PUBLISHED ARTICLES
+// ============================================================
+
+const endpoint =
+  new URL(
+    `${supabaseUrl.replace(
+      /\/$/,
+      ''
+    )}/rest/v1/articles`
+  );
+
+
+endpoint.searchParams.set(
+  'select',
+  [
+    'title',
+    'slug',
+    'excerpt',
+    'body_html',
+    'category',
+    'author_name',
+    'featured_image_url',
+    'image_alt',
+    'published_at',
+    'updated_at'
+  ].join(',')
+);
+
+
+endpoint.searchParams.set(
+  'status',
+  'eq.published'
+);
+
+
+endpoint.searchParams.set(
+  'order',
+  'published_at.desc'
+);
+
+
+// ============================================================
+// REQUEST
+// ============================================================
+
+const response =
+  await fetch(
+    endpoint,
+    {
+
+      headers: {
+
+        apikey:
+          key,
+
+        Authorization:
+          `Bearer ${key}`
+
+      }
+
+    }
+  );
+
+
+if (!response.ok) {
+
+  throw new Error(
+    `Supabase returned ${
+      response.status
+    }: ${
+      await response.text()
+    }`
+  );
+
+}
+
+
+const articles =
+  await response.json();
+
+
+// ============================================================
+// SORT ARTICLES
+// NEWEST → OLDEST
+// ============================================================
+
+articles.sort(
+  (a, b) =>
+    new Date(
+      b.published_at ||
+      0
+    ) -
+    new Date(
+      a.published_at ||
+      0
+    )
+);
+
+
+// ============================================================
+// RECREATE ARTICLES FOLDER
+// ============================================================
+
+const articlesRoot =
+  path.join(
+    SITE_DIR,
+    'articles'
+  );
+
+
+fs.rmSync(
+  articlesRoot,
+  {
+    recursive: true,
+    force: true
+  }
+);
+
+
+fs.mkdirSync(
+  articlesRoot,
+  {
+    recursive: true
+  }
+);
+
+
+// ============================================================
+// GENERATE STATIC ARTICLE PAGES
+// ============================================================
+
+for (
+  let index = 0;
+  index < articles.length;
+  index++
+) {
+
+  const article =
+    articles[index];
+
+
+  if (!article.slug) {
+    continue;
+  }
+
+
+  /*
+    Articles are sorted newest → oldest.
+
+    Next Article =
+    the newer article.
+
+    Previous Article =
+    the older article.
+  */
+
+
+  const nextArticle =
+    index > 0
+      ? articles[index - 1]
+      : null;
+
+
+  const previousArticle =
+    index < articles.length - 1
+      ? articles[index + 1]
+      : null;
+
+
+  const directory =
+    path.join(
+      articlesRoot,
+      article.slug
+    );
+
+
+  fs.mkdirSync(
+    directory,
+    {
+      recursive: true
+    }
+  );
+
+
+  fs.writeFileSync(
+
+    path.join(
+      directory,
+      'index.html'
+    ),
+
+    page(
+      article,
+      previousArticle,
+      nextArticle
+    ),
+
+    'utf8'
+
+  );
+
+}
+
+
+// ============================================================
+// SUCCESS
+// ============================================================
+
+console.log(
+  `Generated ${articles.length} static article page(s).`
+);
