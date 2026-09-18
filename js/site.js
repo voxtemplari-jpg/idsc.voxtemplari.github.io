@@ -6,7 +6,7 @@ const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const niceDate = value => value ? new Intl.DateTimeFormat('en-PH',{year:'numeric',month:'short',day:'numeric'}).format(new Date(value)) : '';
 const articleHref = slug =>
-  `articles/${encodeURIComponent(slug)}/`;
+  `article.html?slug=${encodeURIComponent(slug)}`;
 
 function renderCard(a) {
   return `<article class="story-card" data-category="${esc(a.category)}">
